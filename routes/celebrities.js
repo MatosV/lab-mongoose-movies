@@ -8,7 +8,7 @@ const celebritiesRouter = new express.Router();
 celebritiesRouter.get('/celebrities', (req, res, next) => {
   Celebrity.find()
     .then((celebrities) => {      
-      res.render('celebrities/index', { celebrities: celebrities });
+      res.render('celebrities/index', { celebrities });
       console.log(celebrities);
     })
     .catch(err => {
@@ -23,9 +23,11 @@ celebritiesRouter.get('/celebrities/:id', (req, res, next) => {
   const celebritiesId = req.params.id;
 
   Celebrity.findById(celebritiesId);
+
   console.log(celebritiesId)
     .then((celebrities) => {
-      res.render('celebrities/show', { celebrities: celebrities });
+      console.log(celebrities)
+      res.render('celebrities/show', { celebrities });
     })
     .catch(err => {
       console.log('There was an error')
@@ -45,11 +47,11 @@ celebritiesRouter.post('/celebrities', (req, res) => {
     occupation: req.body.occupation,
     catchPhrase: req.body.catchPhrase
   })
-
+    
   .then((newCelebrity) => {
     newCelebrity.save();
     res.redirect('/celebrities');
-    console.log('Created new Celebrity => ', newCelebrity);
+    console.log(`Created new Celebrity => ${newCelebrity}`);
   })
   .catch(err => {
     console.log('There was an error')
@@ -63,6 +65,7 @@ celebritiesRouter.post('celebrities/:id/delete', (req, res, next) =>{
   const celebritiesId = req.params.id;
 
   Celebrity.findByIdAndRemove(celebritiesId)
+
   .then(() => {
     res.redirect('/celebrities');
     console.log(`You delted this Celebrity => ${celebritiesId}, |x_x|`)
@@ -75,23 +78,36 @@ celebritiesRouter.post('celebrities/:id/delete', (req, res, next) =>{
 
 /* Iteration #6 (Bonus): Editing Celebrities */
 
-celebritiesRouter.get('/celebrities/:id/edit', (req, res) => {
-  res.render('/routes/celebrities');
-})
+celebritiesRouter.get('/celebrities/:id/edit', (req, res, next) => {
+  const celebrityID = req.params.id;
 
-celebritiesRouter.post('/celebrities', (req, res, next) => {
+  Celebrity.findById(celebrityID)
+    .then(celebrities => {
+      res.render('celebrities/edit', { celebrities });
+      console.log(`Celebrity was Edited => ${celebrities}`);
+    })
+    .catch(err => {
+      console.log('There was an erros')
+      next(err);
+    });
+});
+
+celebritiesRouter.post('/celebrities/:id', (req, res, next) => {
   const celebritiesId = req.params.id;
 
-  Celebrity.findById(celebritiesId)
-
-  .then((celebritiesId) => {
-    res.render('/celebrities/edit', {celebritiesId});
-    console.log(`Celebrity ${celebritiesId}, was edited |-_-|`)
+  Celebrity.update(celebritiesId, {
+    name: req.body.name,
+    occupation: req.body.occupation,
+    catchPhrase: req.body.catchPhrase
+  })
+  .then((celebrities) => {
+    res.render('/celebrities', {celebrities})
+    console.log(celebrities)
   })
   .catch(err => {
-    console.log('There was an error')
     next(err)
   })
-});
+})
+
 
 module.exports = celebritiesRouter;
